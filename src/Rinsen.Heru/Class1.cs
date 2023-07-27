@@ -25,9 +25,9 @@ public class Class1
         IModbusMaster master = factory.CreateMaster(client);
 
         var coilStatus = master.ReadCoils(0, (ushort)CoilStatus.UnitOn - 1, 4);
-        master.WriteSingleCoil(0, (ushort)CoilStatus.BoostMode - 1, true);
+        master.WriteSingleCoil(0, (ushort)CoilStatus.BoostMode - 1, false);
         var newCoilStatus = master.ReadCoils(0, (ushort)CoilStatus.UnitOn - 1, 4);
-        var result = master.ReadInputRegisters(0, (ushort)InputRegister.ComponentId - 1, 10);
+        var result = master.ReadInputRegisters(0, (ushort)InputRegister.ComponentId - 1, 30);
         var result2 = master.ReadHoldingRegisters(0, (ushort)HoldingRegister.TemperatureSetpointEconomy - 1, 30);
         // read five input values
     }
