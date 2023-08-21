@@ -16,7 +16,9 @@ namespace HeruConsoleApp
 
             var result = await fanUnit.GetStatusAsync();
             var temperatures = await fanUnit.GetTemperaturesAsync();
+            var fanSpeeds = await fanUnit.GetFanSpeedAsync();
 
+            await fanUnit.ActivateSetting(Setting.BoostMode);
         }
     }
 }

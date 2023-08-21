@@ -1,11 +1,5 @@
 ﻿using Rinsen.Heru.Modbus;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rinsen.Heru;
 
@@ -18,6 +12,10 @@ public class FanUnit
         _modbusOptions = modbusOptions;
     }
 
+    /// <summary>
+    /// Returns an object containing active unit modes and states.
+    /// </summary>
+    /// <returns><see cref="Status"/></returns>
     public async Task<Status> GetStatusAsync()
     {
         var coilStatuses = await new CoilStatusHandler().ReadCoilsAsync(_modbusOptions, CoilStatus.UnitOn, 4);
@@ -31,9 +29,13 @@ public class FanUnit
         };
     }
 
+    /// <summary>
+    /// Returns an object containing current temperatures.
+    /// </summary>
+    /// <returns><see cref="Temperature"/></returns>
     public async Task<Temperature> GetTemperaturesAsync()
     {
-        var inputRegisters = await new InputRegisterHandler().ReadInputRegistersAsync(_modbusOptions, InputRegister.OutdoorTemperature, 7);
+        var inputRegisters = await new InputRegisterHandler().ReadInputRegistersToDictionaryAsync(_modbusOptions, InputRegister.OutdoorTemperature, 7);
 
         return new Temperature
         {
@@ -46,13 +48,108 @@ public class FanUnit
         };
     }
 
-
-
-    
-    public async Task<int> GetFanSpeedAsync()
+    /// <summary>
+    /// Returns and object containing current fan speeds in RPM and percentage
+    /// </summary>
+    /// <returns><see cref="FanSpeed"/></returns>
+    public async Task<FanSpeed> GetFanSpeedAsync()
     {
+        var inputRegisters = await new InputRegisterHandler().ReadInputRegistersToDictionaryAsync(_modbusOptions, InputRegister.CurrentSupplyFanPower, 7);
 
-        throw new NotImplementedException();
+        return new FanSpeed
+        {
+            CurrentSupplyFanPower = inputRegisters[InputRegister.CurrentSupplyFanPower],
+            CurrentExhaustFanPower = inputRegisters[InputRegister.CurrentExhaustFanPower],
+            CurrentSupplyFanSpeed = inputRegisters[InputRegister.CurrentSupplyFanSpeed],
+            CurrentExhaustFanSpeed = inputRegisters[InputRegister.CurrentExhaustFanSpeed]
+        };
+    }
+
+    ///// <summary>
+    ///// Returns raw values from holding registers
+    ///// </summary>
+    ///// <param name="startInputRegister">Parameter for selecting start register to read.</param>
+    ///// <param name="count">Number of registers to read.</param>
+    ///// <returns>Register data.</returns>
+    //public async Task<ushort[]> GetRawHoldingRegister(InputRegister startInputRegister, int count)
+    //{
+    //    var inputRegisters = await new InputRegisterHandler().ReadInputRegistersAsync(_modbusOptions, startInputRegister, (ushort)count);
+
+    //    return inputRegisters;
+    //}
+
+    /// <summary>
+    /// Activate a setting
+    /// </summary>
+    /// <returns>Task</returns>
+    public async Task ActivateSetting(Setting setting)
+    {
+        CoilStatus coilStatus;
+        switch (setting)
+        {
+            case Setting.BoostMode:
+                coilStatus = CoilStatus.BoostMode;
+                break;
+            case Setting.OverpressureMode:
+                coilStatus = CoilStatus.OverpressureMode;
+                break;
+            case Setting.AwayMode:
+                coilStatus = CoilStatus.AwayMode;
+                break;
+            case Setting.UnitOn:
+                coilStatus = CoilStatus.BoostMode;
+                break;
+            case Setting.ClearAlarms:
+                coilStatus = CoilStatus.ClearAlarms;
+                break;
+            case Setting.ResetFilterTimer:
+                coilStatus = CoilStatus.ResetFilterTimer;
+                break;
+            case Setting.ExtendOperation:
+                coilStatus = CoilStatus.ExtendOperation;
+                break;
+            default:
+                throw new Exception("Unknown setting");
+        }
+
+        await new CoilStatusHandler().WriteSingleCoilAsync(_modbusOptions, coilStatus, true);
+    }
+
+    /// <summary>
+    /// Deactivate a setting
+    /// </summary>
+    /// <returns>Task</returns>
+    public async Task DeactivateSetting(Setting setting)
+    {
+        CoilStatus coilStatus;
+        switch (setting)
+        {
+            case Setting.BoostMode:
+                coilStatus = CoilStatus.BoostMode;
+                break;
+            case Setting.OverpressureMode:
+                coilStatus = CoilStatus.OverpressureMode;
+                break;
+            case Setting.AwayMode:
+                coilStatus = CoilStatus.AwayMode;
+                break;
+            case Setting.UnitOn:
+                coilStatus = CoilStatus.BoostMode;
+                break;
+            case Setting.ClearAlarms:
+                coilStatus = CoilStatus.ClearAlarms;
+                break;
+            case Setting.ResetFilterTimer:
+                coilStatus = CoilStatus.ResetFilterTimer;
+                break;
+            case Setting.ExtendOperation:
+                coilStatus = CoilStatus.ExtendOperation;
+                break;
+            default:
+                throw new Exception("Unknown setting");
+        }
+
+        await new CoilStatusHandler().WriteSingleCoilAsync(_modbusOptions, coilStatus, false);
     }
 
     private static double ParseUShortToDouble(ushort value)

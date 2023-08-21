@@ -23,5 +23,21 @@ namespace Rinsen.Heru.Modbus
             return coilStatus;
         }
 
+        internal async Task WriteSingleCoilAsync(ModbusOptions options, CoilStatus coilStatus, bool newStatus)
+        {
+            using TcpClient client = new TcpClient(options.IpAddressOrHostName, options.PortNumber);
+
+            var factory = new ModbusFactory();
+            IModbusMaster master = factory.CreateMaster(client);
+
+            await master.WriteSingleCoilAsync(0, (ushort)(coilStatus - 1), newStatus);
+
+            var result = await master.ReadCoilsAsync(0, (ushort)(coilStatus - 1), 1);
+
+            if (result[0] != newStatus)
+            {
+                throw new Exception("Write failed");
+            }
+        }
     }
 }

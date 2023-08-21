@@ -5,34 +5,32 @@
         /// <summary>
         /// Outdoor temperature entering fan unit
         /// </summary>
-        public double Outdoor { get; set; }
+        public double Outdoor { get; internal set; }
 
         /// <summary>
         /// Intake temperature in heat exchanger
         /// </summary>        
-        public double Rotor { get; set; }
+        public double Rotor { get; internal set; }
 
         /// <summary>
         /// Supply temperature leaving fan unit
         /// </summary>
-        public double Supply { get; set; }
+        public double Supply { get; internal set; }
 
         /// <summary>
         /// Optional: Room temperature if sensor is installed
         /// </summary>
-        public double? Room { get; set; } = null;
+        public double? Room { get; internal set; } = null;
 
         /// <summary>
         /// Temperature of air entering heat exchanger from extract air
         /// </summary>
-        public double Extract { get; set; }
+        public double Extract { get; internal set; }
 
         /// <summary>
         /// Temperature of air leaving heat exchanger to outdoor
         /// </summary>
-        public double Exhaust { get; set; }
-
-
+        public double Exhaust { get; internal set; }
 
     }
 }
