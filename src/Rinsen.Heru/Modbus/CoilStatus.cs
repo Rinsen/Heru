@@ -5,22 +5,22 @@
     /// </summary>
     internal enum CoilStatus : ushort
     {
-        UnitOn = 0x00001,
-        OverpressureMode = 0x00002,
-        BoostMode = 0x00003,
-        AwayMode = 0x00004,
+        UnitOn = 1,
+        OverpressureMode = 2,
+        BoostMode = 3,
+        AwayMode = 4,
         /// <summary>
         /// Write 1 to clear alarm, reads always 0
         /// </summary>
-        ClearAlarms = 0x00005,
+        ClearAlarms = 5,
         /// <summary>
         /// Write 1 to reset filter timer, reads always 0
         /// </summary>
-        ResetFilterTimer = 0x00006,
+        ResetFilterTimer = 6,
         /// <summary>
         /// To wake up from scheduled standby
         /// </summary>
-        ExtendOperation = 0x00007,
+        ExtendOperation = 7,
 
 
     }

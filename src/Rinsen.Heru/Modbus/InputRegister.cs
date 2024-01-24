@@ -14,84 +14,86 @@ namespace Rinsen.Heru.Modbus
         /// <summary>
         /// Always 10
         /// </summary>
-        ComponentId = 0x00001,
-        OutdoorTemperature = 0x00002,
-        SupplyAirTemperature = 0x00003,
-        ExtractAirTemperature = 0x00004,
-        ExhaustAirTemperature = 0x00005,
-        WaterTemperature = 0x00006,
-        HeatRecoveryTemperature = 0x00007,
-        RoomTemperature = 0x00008,
-        RFUReadable1 = 0x00009,
-        RFUReadable2 = 0x00010,
-        RFUReadable3 = 0x00011,
+        ComponentId = 1,
+        /// <summary>
+        /// </summary>
+        OutdoorTemperature = 2,
+        SupplyAirTemperature = 3,
+        ExtractAirTemperature = 4,
+        ExhaustAirTemperature = 5,
+        WaterTemperature = 6,
+        HeatRecoveryTemperature = 7,
+        RoomTemperature = 8,
+        RFUReadable1 = 9,
+        RFUReadable2 = 10,
+        RFUReadable3 = 11,
         /// <summary>
         /// Should not be x0.1Pa, increase with x10
         /// </summary>
-        SupplyPressureDuct = 0x00012,
+        SupplyPressureDuct = 12,
         /// <summary>
         /// Should not be x0.1Pa, increase with x10
         /// </summary>
-        ExtractPressureDuct = 0x00013,
+        ExtractPressureDuct = 13,
         /// <summary>
         /// Bit mask. Bit is set if sensor is required and open circuit. See also Sensors shorted.
         /// </summary>
-        SensorsOpen = 0x00018,
+        SensorsOpen = 18,
         /// <summary>
         /// it mask. Bit is set if sensor is required and shorted. Bit0 = T1 … Bit6 = T7.
         /// </summary>
-        SensorsShorted = 0x00019,
+        SensorsShorted = 19,
         /// <summary>
         /// Number of days to filter change.
         /// </summary>
-        FilterDaysLeft = 0x00020,
+        FilterDaysLeft = 20,
         /// <summary>
         /// 0 = none, 1-5 = program 1-5
         /// </summary>
-        CurrentWeektimerProgram = 0x00021,
+        CurrentWeektimerProgram = 21,
         /// <summary>
         /// 0 = Off, 1 = Min, 2 = Std, 3 = Max
         /// </summary>
-        CurrentSupplyFanStep = 0x00023,
+        CurrentSupplyFanStep = 23,
         /// <summary>
         /// 0 = Off, 1 = Min, 2 = Std, 3 = Max
         /// </summary>
-        CurrentExhaustFanStep = 0x00024,
-        CurrentSupplyFanPower = 0x00025,
-        CurrentExhaustFanPower = 0x00026,
-        CurrentSupplyFanSpeed = 0x00027,
-        CurrentExhaustFanSpeed = 0x00028,
+        CurrentExhaustFanStep = 24,
+        CurrentSupplyFanPower = 25,
+        CurrentExhaustFanPower = 26,
+        CurrentSupplyFanSpeed = 27,
+        CurrentExhaustFanSpeed = 28,
         /// <summary>
         /// 255 = 100%
         /// </summary>
-        CurrentHeatingPower = 0x00029,
+        CurrentHeatingPower = 29,
         /// <summary>
         /// 255 = 100%
         /// </summary>
-        CurrentHeatColdRecoveryPower = 0x00030,
+        CurrentHeatColdRecoveryPower = 30,
         /// <summary>
         /// 255 = 100%
         /// </summary>
-        CurrentCoolingPower = 0x00031,
-        SupplyFanControlVoltage = 0x00032,
-        ExhaustFanControlVoltage = 0x00033,
+        CurrentCoolingPower = 31,
+        SupplyFanControlVoltage = 32,
+        ExhaustFanControlVoltage = 33,
         /// <summary>
         /// 0 = Off, 1 = On
         /// </summary>
-        ChangeoverActive = 0x00034,
+        ChangeoverActive = 34,
         /// <summary>
         /// 0 = None, 1 = RH, 2 = CO2, 3 = VOC
         /// </summary>
-        QualitySensor1Type = 0x00041,
+        QualitySensor1Type = 41,
         /// <summary>
         /// "RH: 0-10V=0-100 (%)
         /// CO2: 0-10V = 0 - 2000(PPM)
         /// VOC: 0-10V = 0 - 2000(PPM)"
         /// </summary>
-        QualitySensor1Value = 0x00042,
-        QualitySensor2Type = 0x00043,
-        QualitySensor2Value = 0x00044,
-        QualitySensor3Type = 0x00045,
-        QualitySensor3Value = 0x00046
+        QualitySensor1Value = 42,
+        QualitySensor2Type = 43,
+        QualitySensor2Value = 44,
+        QualitySensor3Type = 45,
+        QualitySensor3Value = 46
     }
 }
