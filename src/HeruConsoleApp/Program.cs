@@ -1,4 +1,6 @@
 ﻿using Rinsen.Heru;
+using System.Globalization;
+
 
 namespace HeruConsoleApp
 {
@@ -6,22 +8,26 @@ namespace HeruConsoleApp
     {
         static async Task Main(string[] args)
         {
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
             Console.WriteLine("Heru statistics via modbus");
-
+            
             await PrintStatus();
         }
 
+
         private static async Task PrintStatus()
         {
-            using var fanUnit = new FanUnit(new ModbusOptions
+            using var fanUnit = FanUnit.Create(new ModbusOptions
             {
-                IpAddressOrHostName = "192.168.1.220",
+                IpAddressOrHostName = "192.168.1.68",
                 PortNumber = 502
             });
 
             var status = await fanUnit.GetStatusAsync();
             var temperatures = await fanUnit.GetTemperaturesAsync();
             var fanSpeeds = await fanUnit.GetFanSpeedAsync();
+            await fanUnit.SetTime();
 
             Console.WriteLine($"UnitOn: {status.UnitOn}");
             Console.WriteLine($"BoostActive: {status.BoostActive}");

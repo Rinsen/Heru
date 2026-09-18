@@ -1,28 +1,25 @@
-﻿using NModbus;
-using NModbus.Device;
-using NModbus.Logging;
-using Rinsen.Heru.Modbus;
+﻿using Rinsen.Heru.Modbus;
 using System.Globalization;
-using System.Net.Sockets;
 
 namespace Rinsen.Heru;
 
 public class FanUnit : IDisposable
 {
-    private readonly ModbusOptions _modbusOptions;
-    private readonly CoilStatusHandler _coilStatusHandler;
-    private readonly InputRegisterHandler _inputRegisterHandler;
-    private readonly InputStatusHandler _inputStatusHandler;
-    private TcpClient? _tcpClient = null;
-    private IModbusMaster? _modbusMaster = null;
+    private readonly ApplicationControlCoilStatusRegistersHandler _applicationControlCoilStatusRegistersHandler;
+    private readonly ApplicationControlInputRegistersHandler _applicationControlInputRegistersHandler;
+    private readonly DateTimeHandler _dateTimeHandler;
     private bool disposedValue;
+    private static ModbusMasterFactory? _modbusClient = null;
 
-    public FanUnit(ModbusOptions modbusOptions)
+    internal FanUnit(
+        ApplicationControlCoilStatusRegistersHandler applicationControlCoilStatusRegistersHandler,
+        ApplicationControlInputRegistersHandler applicationControlInputRegistersHandler,
+        ApplicationControlHoldingRegisterHandler applicationControlHoldingRegisterHandler,
+        DateTimeHandler dateTimeHandler)
     {
-        _modbusOptions = modbusOptions;
-        _coilStatusHandler = new CoilStatusHandler();
-        _inputRegisterHandler = new InputRegisterHandler();
-        _inputStatusHandler = new InputStatusHandler();
+        _applicationControlCoilStatusRegistersHandler = applicationControlCoilStatusRegistersHandler;
+        _applicationControlInputRegistersHandler = applicationControlInputRegistersHandler;
+        _dateTimeHandler = dateTimeHandler;
     }
 
     /// <summary>
@@ -31,15 +28,14 @@ public class FanUnit : IDisposable
     /// <returns><see cref="Status"/></returns>
     public async Task<Status> GetStatusAsync()
     {
-        var coilStatuses = await _coilStatusHandler.ReadCoilsAsync(GetModbusMaster(), CoilStatus.UnitOn, 4);
-        //var a = await _inputStatusHandler.ReadInputRegistersToDictionaryAsync(GetModbusMaster(), InputStatus.FireAlarmInput, 53);
+        var coilStatuses = await _applicationControlCoilStatusRegistersHandler.ReadApplicationControlStatisRegisters(ApplicationControlCoilStatusRegisters.UnitOn, 4);
 
         return new Status
         {
-            UnitOn = coilStatuses[(int)CoilStatus.UnitOn - 1],
-            BoostActive = coilStatuses[(int)CoilStatus.BoostMode - 1],
-            OverpressureActive = coilStatuses[(int)CoilStatus.OverpressureMode - 1],
-            AwayActive = coilStatuses[(int)CoilStatus.AwayMode - 1]
+            UnitOn = coilStatuses[(int)ApplicationControlCoilStatusRegisters.UnitOn - 1],
+            BoostActive = coilStatuses[(int)ApplicationControlCoilStatusRegisters.BoostMode - 1],
+            OverpressureActive = coilStatuses[(int)ApplicationControlCoilStatusRegisters.OverpressureMode - 1],
+            AwayActive = coilStatuses[(int)ApplicationControlCoilStatusRegisters.AwayMode - 1]
         };
     }
 
@@ -49,16 +45,16 @@ public class FanUnit : IDisposable
     /// <returns><see cref="Temperature"/></returns>
     public async Task<Temperature> GetTemperaturesAsync()
     {
-        var inputRegisters = await _inputRegisterHandler.ReadInputRegistersToDictionaryAsync(GetModbusMaster(), InputRegister.OutdoorTemperature, 7);
+        var inputRegisters = await _applicationControlInputRegistersHandler.ReadApplicationControlInputs(ApplicationControlInputRegisters.OutdoorTemperature, 7);
 
         return new Temperature
         {
-            Exhaust = ParseUShortToDouble(inputRegisters[InputRegister.ExhaustAirTemperature]),
-            Extract = ParseUShortToDouble(inputRegisters[InputRegister.ExtractAirTemperature]),
-            Outdoor = ParseUShortToDouble(inputRegisters[InputRegister.OutdoorTemperature]),
-            Room = inputRegisters[InputRegister.RoomTemperature] == 55546 ? null : ParseUShortToDouble(inputRegisters[InputRegister.RoomTemperature]),
-            Supply = ParseUShortToDouble(inputRegisters[InputRegister.SupplyAirTemperature]),
-            Rotor = ParseUShortToDouble(inputRegisters[InputRegister.HeatRecoveryTemperature])
+            Exhaust = ParseUShortToDouble(inputRegisters[ApplicationControlInputRegisters.ExhaustAirTemperature]),
+            Extract = ParseUShortToDouble(inputRegisters[ApplicationControlInputRegisters.ExtractAirTemperature]),
+            Outdoor = ParseUShortToDouble(inputRegisters[ApplicationControlInputRegisters.OutdoorTemperature]),
+            Room = inputRegisters[ApplicationControlInputRegisters.RoomTemperature] == 55546 ? null : ParseUShortToDouble(inputRegisters[ApplicationControlInputRegisters.RoomTemperature]),
+            Supply = ParseUShortToDouble(inputRegisters[ApplicationControlInputRegisters.SupplyAirTemperature]),
+            Rotor = ParseUShortToDouble(inputRegisters[ApplicationControlInputRegisters.HeatRecoveryTemperature])
         };
     }
 
@@ -68,29 +64,16 @@ public class FanUnit : IDisposable
     /// <returns><see cref="FanSpeed"/></returns>
     public async Task<FanSpeed> GetFanSpeedAsync()
     {
-        var inputRegisters = await new InputRegisterHandler().ReadInputRegistersToDictionaryAsync(GetModbusMaster(), InputRegister.CurrentSupplyFanPower, 4);
+        var inputRegisters = await _applicationControlInputRegistersHandler.ReadApplicationControlInputs(ApplicationControlInputRegisters.CurrentSupplyFanPower, 4);
 
         return new FanSpeed
         {
-            CurrentSupplyFanPower = inputRegisters[InputRegister.CurrentSupplyFanPower],
-            CurrentExhaustFanPower = inputRegisters[InputRegister.CurrentExhaustFanPower],
-            CurrentSupplyFanSpeed = inputRegisters[InputRegister.CurrentSupplyFanSpeed],
-            CurrentExhaustFanSpeed = inputRegisters[InputRegister.CurrentExhaustFanSpeed]
+            CurrentSupplyFanPower = inputRegisters[ApplicationControlInputRegisters.CurrentSupplyFanPower],
+            CurrentExhaustFanPower = inputRegisters[ApplicationControlInputRegisters.CurrentExhaustFanPower],
+            CurrentSupplyFanSpeed = inputRegisters[ApplicationControlInputRegisters.CurrentSupplyFanSpeed],
+            CurrentExhaustFanSpeed = inputRegisters[ApplicationControlInputRegisters.CurrentExhaustFanSpeed]
         };
     }
-
-    ///// <summary>
-    ///// Returns raw values from holding registers
-    ///// </summary>
-    ///// <param name="startInputRegister">Parameter for selecting start register to read.</param>
-    ///// <param name="count">Number of registers to read.</param>
-    ///// <returns>Register data.</returns>
-    //public async Task<ushort[]> GetRawHoldingRegister(InputRegister startInputRegister, int count)
-    //{
-    //    var inputRegisters = await new InputRegisterHandler().ReadInputRegistersAsync(_modbusOptions, startInputRegister, (ushort)count);
-
-    //    return inputRegisters;
-    //}
 
     /// <summary>
     /// Activate a setting
@@ -98,7 +81,7 @@ public class FanUnit : IDisposable
     /// <returns>Task</returns>
     public async Task ActivateSetting(Setting setting)
     {
-        await ChangeSetting(GetModbusMaster(), setting, true);
+        await ChangeSetting(setting, true);
     }
 
     /// <summary>
@@ -107,55 +90,45 @@ public class FanUnit : IDisposable
     /// <returns>Task</returns>
     public async Task DeactivateSetting(Setting setting)
     {
-        await ChangeSetting(GetModbusMaster(), setting, false);
+        await ChangeSetting(setting, false);
     }
 
-    private async Task ChangeSetting(IModbusMaster modbusMaster, Setting setting, bool value)
+    private async Task ChangeSetting(Setting setting, bool value)
     {
-        CoilStatus coilStatus;
+        ApplicationControlCoilStatusRegisters coilStatus;
         switch (setting)
         {
             case Setting.BoostMode:
-                coilStatus = CoilStatus.BoostMode;
+                coilStatus = ApplicationControlCoilStatusRegisters.BoostMode;
                 break;
             case Setting.OverpressureMode:
-                coilStatus = CoilStatus.OverpressureMode;
+                coilStatus = ApplicationControlCoilStatusRegisters.OverpressureMode;
                 break;
             case Setting.AwayMode:
-                coilStatus = CoilStatus.AwayMode;
+                coilStatus = ApplicationControlCoilStatusRegisters.AwayMode;
                 break;
             case Setting.UnitOn:
-                coilStatus = CoilStatus.UnitOn;
+                coilStatus = ApplicationControlCoilStatusRegisters.UnitOn;
                 break;
             case Setting.ClearAlarms:
-                coilStatus = CoilStatus.ClearAlarms;
+                coilStatus = ApplicationControlCoilStatusRegisters.ClearAlarms;
                 break;
             case Setting.ResetFilterTimer:
-                coilStatus = CoilStatus.ResetFilterTimer;
+                coilStatus = ApplicationControlCoilStatusRegisters.ResetFilterTimer;
                 break;
             case Setting.ExtendOperation:
-                coilStatus = CoilStatus.ExtendOperation;
+                coilStatus = ApplicationControlCoilStatusRegisters.ExtendOperation;
                 break;
             default:
                 throw new Exception("Unknown setting");
         }
 
-        await _coilStatusHandler.WriteSingleCoilAsync(modbusMaster, coilStatus, value);
+        await _applicationControlCoilStatusRegistersHandler.WriteSingleCoilAsync(coilStatus, value);
     }
 
-    private IModbusMaster GetModbusMaster()
+    public async Task SetTime()
     {
-        if (_modbusMaster != null)
-        {
-            return _modbusMaster;
-        }
-
-        _tcpClient = new TcpClient(_modbusOptions.IpAddressOrHostName, _modbusOptions.PortNumber);
-
-        var factory = new ModbusFactory(logger: new DebugModbusLogger(LoggingLevel.Trace));
-        _modbusMaster = factory.CreateMaster(_tcpClient);
-
-        return _modbusMaster;
+        await _dateTimeHandler.SetDateTimeNowAsync();
     }
 
     private static double ParseUShortToDouble(ushort value)
@@ -173,30 +146,37 @@ public class FanUnit : IDisposable
         return result;
     }
 
+    public static FanUnit Create(ModbusOptions modbusOptions)
+    {
+        if (_modbusClient == null)
+        {
+            _modbusClient = new ModbusMasterFactory(modbusOptions);
+        }
+
+        var applicationControlCoilStatusRegistersHandler = new ApplicationControlCoilStatusRegistersHandler(_modbusClient);
+        var applicationControlInputRegistersHandler = new ApplicationControlInputRegistersHandler(_modbusClient);
+        var applicationControlHoldingRegisterHandler = new ApplicationControlHoldingRegisterHandler(_modbusClient);
+        var dateTimeHandler = new DateTimeHandler(applicationControlHoldingRegisterHandler);
+
+        return new FanUnit(applicationControlCoilStatusRegistersHandler, applicationControlInputRegistersHandler, applicationControlHoldingRegisterHandler, dateTimeHandler);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!disposedValue)
         {
             if (disposing)
             {
-                _tcpClient?.Dispose();
-                _tcpClient = null;
-                _modbusMaster?.Dispose();
-                _modbusMaster = null;
+                if (_modbusClient != null)
+                {
+                    _modbusClient.Dispose();
+                    _modbusClient = null;
+                }
             }
 
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
             disposedValue = true;
         }
     }
-
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~FanUnit()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
 
     public void Dispose()
     {

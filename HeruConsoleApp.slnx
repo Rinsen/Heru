@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HeruConsoleApp/HeruConsoleApp.csproj" />
+    <Project Path="src/Rinsen.Heru/Rinsen.Heru.csproj" />
+  </Folder>
+</Solution>
