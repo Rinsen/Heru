@@ -2,8 +2,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project files and restore
-COPY ["src/HeruConsoleApp/HeruConsoleApp.csproj", "src/HeruConsoleApp/"]
-COPY ["src/Rinsen.Heru/Rinsen.Heru.csproj", "src/Rinsen.Heru/"]
+COPY ["HeruConsoleApp/HeruConsoleApp.csproj", "HeruConsoleApp/"]
+COPY ["Rinsen.Heru/Rinsen.Heru.csproj", "Rinsen.Heru/"]
 RUN dotnet restore "src/HeruConsoleApp/HeruConsoleApp.csproj"
 
 # Build and publish
