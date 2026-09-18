@@ -1,14 +1,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["HeruConsoleApp.csproj", "./"]
-RUN dotnet restore "HeruConsoleApp.csproj"
+# Copy project files and restore
+COPY ["src/HeruConsoleApp/HeruConsoleApp.csproj", "src/HeruConsoleApp/"]
+COPY ["src/Rinsen.Heru/Rinsen.Heru.csproj", "src/Rinsen.Heru/"]
+RUN dotnet restore "src/HeruConsoleApp/HeruConsoleApp.csproj"
 
+# Build and publish
 COPY . .
 WORKDIR "/src/HeruConsoleApp"
-RUN dotnet build "HeruConsoleApp.csproj" -c Release -o /app
+RUN dotnet build "HeruConsoleApp.csproj" -c Release -o out
+RUN dotnet publish "HeruConsoleApp.csproj" -c Release -o out
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
-COPY --from=build /app .
+COPY --from=build /out .
 ENTRYPOINT ["dotnet", "HeruConsoleApp.dll"]
