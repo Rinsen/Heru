@@ -4,7 +4,7 @@ WORKDIR /src
 # Copy project files and restore
 COPY ["HeruConsoleApp/HeruConsoleApp.csproj", "HeruConsoleApp/"]
 COPY ["Rinsen.Heru/Rinsen.Heru.csproj", "Rinsen.Heru/"]
-RUN dotnet restore "src/HeruConsoleApp/HeruConsoleApp.csproj"
+RUN dotnet restore "HeruConsoleApp/HeruConsoleApp.csproj"
 
 # Build and publish
 COPY . .
